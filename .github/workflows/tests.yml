@@ -63,11 +63,6 @@ jobs:
         bandit -r s3syncy -f json -o bandit-report.json || true
         bandit -r s3syncy -f txt || true
     
-    - name: Check dependencies with Safety
-      run: |
-        pip install safety
-        safety check --json || true
-    
     - name: Upload Bandit report
       if: always()
       uses: actions/upload-artifact@v4
