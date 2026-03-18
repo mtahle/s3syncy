@@ -14,7 +14,7 @@ import threading
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Generator, List, Optional, Tuple
+from typing import Generator, List, Optional
 
 log = logging.getLogger(__name__)
 
