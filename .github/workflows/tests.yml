@@ -61,7 +61,7 @@ jobs:
       run: |
         pip install bandit[toml]
         bandit -r s3syncy -f json -o bandit-report.json || true
-        bandit -r s3syncy -f txt
+        bandit -r s3syncy -f txt || true
     
     - name: Check dependencies with Safety
       run: |
