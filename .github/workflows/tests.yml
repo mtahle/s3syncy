@@ -30,18 +30,18 @@ jobs:
     
     - name: Test imports
       run: |
-        python -c "import s3sync; print('s3sync imported successfully')"
+        python -c "import s3syncy; print('s3syncy imported successfully')"
     
     - name: Test CLI help
       run: |
-        s3sync --help
-        s3sync init --help
+        s3syncy --help
+        s3syncy init --help
     
     - name: Lint with flake8 (optional)
       run: |
         pip install flake8
         # Stop the build if there are Python syntax errors or undefined names
-        flake8 s3sync --count --select=E9,F63,F7,F82 --show-source --statistics --exit-zero
+        flake8 s3syncy --count --select=E9,F63,F7,F82 --show-source --statistics --exit-zero
 
   build:
     needs: test
