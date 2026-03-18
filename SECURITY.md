@@ -49,7 +49,7 @@ s3syncy implements multiple layers of security scanning:
 
 - Linting with `flake8`
 - Type checking with `mypy` (can be enabled)
-- Tested on Python 3.10, 3.11, 3.12, 3.13, 3.14
+- Tested on Python 3.10, 3.11, 3.12
 - Cross-platform testing (Windows, macOS, Linux)
 
 ### Security Best Practices
