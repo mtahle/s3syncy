@@ -130,12 +130,12 @@ dmypy.json
 *~
 .DS_Store
 
-# s3sync specific
+# s3syncy specific
 config.yaml
 config.yaml.pid
 config.yaml.state.json
-.s3sync_index.db
-.s3sync_index.db-shm
-.s3sync_index.db-wal
-s3sync.log
+.s3syncy_index.db
+.s3syncy_index.db-shm
+.s3syncy_index.db-wal
+s3syncy.log
 .syncignore
