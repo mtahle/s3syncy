@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
 authors = [
-    {name = "mtahle", email = ""}
+    {name = "mtahle"}
 ]
 keywords = ["s3", "sync", "daemon", "file", "backup", "cloud", "storage", "aws"]
 classifiers = [

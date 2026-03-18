@@ -19,7 +19,6 @@ setup(
         "Issues": "https://github.com/mtahle/s3syncy/issues",
     },
     author="mtahle",
-    author_email="",
     license="MIT",
     packages=find_packages(),
     python_requires=">=3.10",
