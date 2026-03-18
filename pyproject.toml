@@ -1,0 +1,60 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "s3sync"
+version = "0.1.0"
+description = "Cross-platform, multithreaded S3 file synchronization daemon"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "mtahle", email = ""}
+]
+keywords = ["s3", "sync", "daemon", "file", "backup", "cloud", "storage", "aws"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: System :: Filesystems",
+    "Topic :: Utilities",
+]
+dependencies = [
+    "boto3>=1.28",
+    "watchdog>=3.0",
+    "pathspec>=0.11",
+    "PyYAML>=6.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/mtahle/s3-sync.git"
+Documentation = "https://github.com/mtahle/s3-sync.git#readme"
+Repository = "https://github.com/mtahle/s3-sync.git.git"
+Issues = "https://github.com/mtahle/s3-sync.git/issues"
+
+[project.scripts]
+s3sync = "s3sync.cli:main"
+
+[tool.setuptools]
+packages = ["s3sync"]
+
+[tool.black]
+line-length = 100
+target-version = ["py310", "py311", "py312"]
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
