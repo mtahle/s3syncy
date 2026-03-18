@@ -5,7 +5,7 @@ Complete command-line interface documentation for s3sync.
 ## Basic Usage
 
 ```bash
-s3sync <command> [options]
+s3syncy <command> [options]
 ```
 
 ## Global Options
@@ -24,7 +24,7 @@ Global options that work with all commands:
 Initialize a new configuration.
 
 ```bash
-s3sync init
+s3syncy init
 ```
 
 **Creates:**
@@ -44,7 +44,7 @@ Edit config.yaml and set your S3 bucket and directories to sync.
 Start the synchronization daemon.
 
 ```bash
-s3sync start -c config.yaml [--background]
+s3syncy start -c config.yaml [--background]
 ```
 
 **Options:**
@@ -55,12 +55,12 @@ s3sync start -c config.yaml [--background]
 
 Foreground (blocking):
 ```bash
-s3sync start -c config.yaml
+s3syncy start -c config.yaml
 ```
 
 Background (returns with PID):
 ```bash
-s3sync start -c config.yaml --background
+s3syncy start -c config.yaml --background
 Started daemon in background (pid 12345)
 ```
 
@@ -73,12 +73,12 @@ Started daemon in background (pid 12345)
 Stop the background daemon.
 
 ```bash
-s3sync stop -c config.yaml
+s3syncy stop -c config.yaml
 ```
 
 **Example:**
 ```bash
-$ s3sync stop -c config.yaml
+$ s3syncy stop -c config.yaml
 Daemon stopped (pid was 12345)
 ```
 
@@ -87,21 +87,21 @@ Daemon stopped (pid was 12345)
 Pause syncing without stopping the daemon.
 
 ```bash
-s3sync pause -c config.yaml
+s3syncy pause -c config.yaml
 ```
 
 **Effect:**
 - Daemon continues running
 - File watching pauses
 - Full scans pause
-- Resume with `s3sync resume`
+- Resume with `s3syncy resume`
 
 ### resume
 
 Resume syncing after pause.
 
 ```bash
-s3sync resume -c config.yaml
+s3syncy resume -c config.yaml
 ```
 
 ### reload
@@ -109,12 +109,12 @@ s3sync resume -c config.yaml
 Reload configuration and `.syncignore` without restarting.
 
 ```bash
-s3sync reload -c config.yaml
+s3syncy reload -c config.yaml
 ```
 
 **Example:**
 ```bash
-$ s3sync reload -c config.yaml
+$ s3syncy reload -c config.yaml
 Configuration reloaded
 ```
 
@@ -128,7 +128,7 @@ Configuration reloaded
 Show daemon status and state.
 
 ```bash
-s3sync daemon-status -c config.yaml
+s3syncy daemon-status -c config.yaml
 ```
 
 **Output:**
@@ -157,7 +157,7 @@ s3sync daemon-status -c config.yaml
 Show synchronization statistics.
 
 ```bash
-s3sync status -c config.yaml
+s3syncy status -c config.yaml
 ```
 
 **Output:**
@@ -277,12 +277,12 @@ s3sync pull "documents/report.pdf" ~/Downloads/report.pdf -c config.yaml
 
 Terminal 1 (start daemon):
 ```bash
-s3sync start -c config.yaml --background
+s3syncy start -c config.yaml --background
 ```
 
 Terminal 2 (monitor):
 ```bash
-watch s3sync status -c config.yaml
+watch s3syncy status -c config.yaml
 ```
 
 ### Backup multiple directories

@@ -139,3 +139,6 @@ config.yaml.state.json
 .s3syncy_index.db-wal
 s3syncy.log
 .syncignore
+.s3sync_index.db
+.s3sync_index.db-shm
+.s3sync_index.db-wal

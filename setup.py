@@ -7,16 +7,16 @@ with open(os.path.join(here, "README.md"), encoding="utf-8") as f:
     long_description = f.read()
 
 setup(
-    name="s3sync",
+    name="s3syncy",
     version="0.1.0",
     description="Cross-platform, multithreaded S3 file synchronization daemon",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/mtahle/s3-sync.git",
+    url="https://github.com/mtahle/s3syncy",
     project_urls={
-        "Documentation": "https://github.com/mtahle/s3-sync.git#readme",
-        "Source": "https://github.com/mtahle/s3-sync.git",
-        "Issues": "https://github.com/mtahle/s3-sync.git/issues",
+        "Documentation": "https://github.com/mtahle/s3syncy#readme",
+        "Source": "https://github.com/mtahle/s3syncy",
+        "Issues": "https://github.com/mtahle/s3syncy/issues",
     },
     author="mtahle",
     author_email="",
@@ -31,7 +31,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "s3sync=s3sync.cli:main",
+            "s3syncy=s3syncy.cli:main",
         ],
     },
     classifiers=[

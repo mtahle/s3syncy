@@ -3,7 +3,7 @@ requires = ["setuptools>=45", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "s3sync"
+name = "s3syncy"
 version = "0.1.0"
 description = "Cross-platform, multithreaded S3 file synchronization daemon"
 readme = "README.md"
@@ -34,16 +34,16 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/mtahle/s3-sync.git"
-Documentation = "https://github.com/mtahle/s3-sync.git#readme"
-Repository = "https://github.com/mtahle/s3-sync.git.git"
-Issues = "https://github.com/mtahle/s3-sync.git/issues"
+Homepage = "https://github.com/mtahle/s3syncy"
+Documentation = "https://github.com/mtahle/s3syncy#readme"
+Repository = "https://github.com/mtahle/s3syncy.git"
+Issues = "https://github.com/mtahle/s3syncy/issues"
 
 [project.scripts]
-s3sync = "s3sync.cli:main"
+s3syncy = "s3syncy.cli:main"
 
 [tool.setuptools]
-packages = ["s3sync"]
+packages = ["s3syncy"]
 
 [tool.black]
 line-length = 100

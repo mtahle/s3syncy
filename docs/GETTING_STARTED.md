@@ -11,7 +11,7 @@ pip install s3sync
 ## Step 2: Initialize Configuration
 
 ```bash
-s3sync init
+s3syncy init
 ```
 
 This creates two files in your current directory:
@@ -52,7 +52,7 @@ s3:
 Preview what will be synced without starting the daemon:
 
 ```bash
-s3sync status -c config.yaml
+s3syncy status -c config.yaml
 ```
 
 This shows:
@@ -65,7 +65,7 @@ This shows:
 ### Option A: Run in foreground (for testing)
 
 ```bash
-s3sync start -c config.yaml
+s3syncy start -c config.yaml
 ```
 
 Press `Ctrl+C` to stop.
@@ -73,13 +73,13 @@ Press `Ctrl+C` to stop.
 ### Option B: Run in background (production)
 
 ```bash
-s3sync start -c config.yaml --background
+s3syncy start -c config.yaml --background
 ```
 
 ### Check Status
 
 ```bash
-s3sync daemon-status -c config.yaml
+s3syncy daemon-status -c config.yaml
 ```
 
 Output:
@@ -100,7 +100,7 @@ Output:
 ### Pause Synchronization
 
 ```bash
-s3sync pause -c config.yaml
+s3syncy pause -c config.yaml
 ```
 
 The daemon continues running but won't sync changes.
@@ -108,13 +108,13 @@ The daemon continues running but won't sync changes.
 ### Resume Synchronization
 
 ```bash
-s3sync resume -c config.yaml
+s3syncy resume -c config.yaml
 ```
 
 ### Reload Configuration
 
 ```bash
-s3sync reload -c config.yaml
+s3syncy reload -c config.yaml
 ```
 
 This reloads both `config.yaml` and `.syncignore` without restarting the daemon.
@@ -122,7 +122,7 @@ This reloads both `config.yaml` and `.syncignore` without restarting the daemon.
 ### Stop the Daemon
 
 ```bash
-s3sync stop -c config.yaml
+s3syncy stop -c config.yaml
 ```
 
 ### Search Files
@@ -130,8 +130,8 @@ s3sync stop -c config.yaml
 Find synced files by name:
 
 ```bash
-s3sync search "document" -c config.yaml
-s3sync search "*.pdf" -c config.yaml
+s3syncy search "document" -c config.yaml
+s3syncy search "*.pdf" -c config.yaml
 ```
 
 ### List Directory
@@ -139,13 +139,13 @@ s3sync search "*.pdf" -c config.yaml
 List files under a specific S3 path:
 
 ```bash
-s3sync ls "backups/2026" -c config.yaml
+s3syncy ls "backups/2026" -c config.yaml
 ```
 
 ### Download a File
 
 ```bash
-s3sync pull "backups/important.zip" ./local.zip -c config.yaml
+s3syncy pull "backups/important.zip" ./local.zip -c config.yaml
 ```
 
 ## Understanding .syncignore

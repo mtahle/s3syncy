@@ -1,7 +1,7 @@
-# s3sync
+# s3syncy
 
-[![Tests](https://github.com/mtahle/s3-sync.git/workflows/Tests/badge.svg)](https://github.com/mtahle/s3-sync.git/actions)
-[![PyPI version](https://badge.fury.io/py/s3sync.svg)](https://badge.fury.io/py/s3sync)
+[![Tests](https://github.com/mtahle/s3syncy/workflows/Tests/badge.svg)](https://github.com/mtahle/s3syncy/actions)
+[![PyPI version](https://badge.fury.io/py/s3syncy.svg)](https://badge.fury.io/py/s3syncy)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Cross-platform, multithreaded S3 file synchronisation daemon.
@@ -26,35 +26,35 @@ Cross-platform, multithreaded S3 file synchronisation daemon.
 
 ```bash
 # Install from PyPI
-pip install s3sync
+pip install s3syncy
 
 # Initialize configuration
-s3sync init
+s3syncy init
 
 # Edit config.yaml with your S3 bucket and sync directories
 # Then run:
-s3sync start -c config.yaml --background
+s3syncy start -c config.yaml --background
 
 # Check status
-s3sync status -c config.yaml
+s3syncy status -c config.yaml
 ```
 
 ## CLI Commands
 
 | Command | Description |
 |---------|-------------|
-| `s3sync start -c config.yaml` | Start the sync daemon |
-| `s3sync start -c config.yaml --background` | Start daemon in background |
-| `s3sync stop -c config.yaml` | Stop background daemon |
-| `s3sync pause -c config.yaml` | Pause syncing (daemon stays alive) |
-| `s3sync resume -c config.yaml` | Resume syncing after pause |
-| `s3sync reload -c config.yaml` | Reload config + exclusions immediately |
-| `s3sync daemon-status -c config.yaml` | Show daemon PID/running/state info |
-| `s3sync search "report" -c config.yaml` | Search the index for files matching "report" |
-| `s3sync ls "photos/2024" -c config.yaml` | List synced files under a path prefix |
-| `s3sync pull "docs/file.pdf" ./local.pdf -c config.yaml` | Download a single file from S3 |
-| `s3sync status -c config.yaml` | Show index statistics (total files, synced count, total size) |
-| `s3sync init` | Create starter `config.yaml` and `.syncignore` |
+| `s3syncy start -c config.yaml` | Start the sync daemon |
+| `s3syncy start -c config.yaml --background` | Start daemon in background |
+| `s3syncy stop -c config.yaml` | Stop background daemon |
+| `s3syncy pause -c config.yaml` | Pause syncing (daemon stays alive) |
+| `s3syncy resume -c config.yaml` | Resume syncing after pause |
+| `s3syncy reload -c config.yaml` | Reload config + exclusions immediately |
+| `s3syncy daemon-status -c config.yaml` | Show daemon PID/running/state info |
+| `s3syncy search "report" -c config.yaml` | Search the index for files matching "report" |
+| `s3syncy ls "photos/2024" -c config.yaml` | List synced files under a path prefix |
+| `s3syncy pull "docs/file.pdf" ./local.pdf -c config.yaml` | Download a single file from S3 |
+| `s3syncy status -c config.yaml` | Show index statistics (total files, synced count, total size) |
+| `s3syncy init` | Create starter `config.yaml` and `.syncignore` |
 
 ## Configuration
 

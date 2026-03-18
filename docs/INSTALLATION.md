@@ -11,13 +11,13 @@
 ### 1. Install from PyPI (Recommended)
 
 ```bash
-pip install s3sync
+pip install s3syncy
 ```
 
 ### 2. Verify Installation
 
 ```bash
-s3sync --help
+s3syncy --help
 ```
 
 You should see the help message listing available commands.
@@ -52,7 +52,7 @@ s3sync uses boto3, which looks for credentials in this order:
 
 ```bash
 # This will work if credentials are set up correctly
-s3sync init
+s3syncy init
 ```
 
 ## Development Installation
@@ -76,13 +76,13 @@ pip install -e .
 ## Upgrading
 
 ```bash
-pip install --upgrade s3sync
+pip install --upgrade s3syncy
 ```
 
 ## Uninstalling
 
 ```bash
-pip uninstall s3sync
+pip uninstall s3syncy
 ```
 
 Note: This removes the s3sync package but leaves any config files and databases intact.
