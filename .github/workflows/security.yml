@@ -43,6 +43,9 @@ jobs:
   trivy-scan:
     name: Trivy Vulnerability Scan
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
 
     steps:
     - name: Checkout repository
@@ -59,7 +62,7 @@ jobs:
 
     - name: Upload Trivy results to GitHub Security tab
       uses: github/codeql-action/upload-sarif@v4
-      if: always()
+      if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
       with:
         sarif_file: 'trivy-results.sarif'
         category: 'trivy'

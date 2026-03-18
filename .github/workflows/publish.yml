@@ -3,12 +3,6 @@ name: Publish to PyPI
 on:
   release:
     types: [published]
-  push:
-    branches: [ main ]
-    paths:
-      - 'setup.py'
-      - 'pyproject.toml'
-      - 's3syncy/**'
 
 jobs:
   deploy:
