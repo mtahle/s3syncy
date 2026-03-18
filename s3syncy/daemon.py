@@ -155,7 +155,8 @@ class SyncDaemon:
 
                 self._wait_for_next_scan(scan_interval)
         except KeyboardInterrupt:
-            pass
+            log.info("KeyboardInterrupt received — initiating graceful shutdown")
+            self._shutdown_event.set()
         finally:
             self._graceful_shutdown()
 
