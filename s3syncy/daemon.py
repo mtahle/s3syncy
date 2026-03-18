@@ -351,8 +351,8 @@ class SyncDaemon:
             return
         try:
             self.pid_file.unlink(missing_ok=True)
-        except OSError:
-            pass
+        except OSError as exc:
+            log.warning("Failed to remove PID file %s: %s", self.pid_file, exc)
 
     def _write_state(self, status: str, extra: dict[str, Any] | None = None) -> None:
         payload: dict[str, Any] = {
