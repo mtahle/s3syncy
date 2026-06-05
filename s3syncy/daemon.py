@@ -324,7 +324,15 @@ class SyncDaemon:
             "config_path": str(self.config_path),
             "started_at": datetime.now(timezone.utc).isoformat(),
         }
-        self.pid_file.write_text(json.dumps(payload), encoding="utf-8")
+        # Atomic write: write to temp file, then rename
+        temp_file = self.pid_file.with_suffix(self.pid_file.suffix + ".tmp")
+        try:
+            temp_file.write_text(json.dumps(payload), encoding="utf-8")
+            temp_file.rename(self.pid_file)
+        except Exception:
+            # Clean up temp file on error
+            temp_file.unlink(missing_ok=True)
+            raise
 
     def _read_pid_file(self) -> int | None:
         if not self.pid_file.exists():
