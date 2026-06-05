@@ -68,7 +68,7 @@ class SyncEngine:
         self._s3 = session.client("s3", **client_kwargs)
 
         self._pool = ThreadPoolExecutor(
-            max_workers=cfg.threads, thread_name_prefix="s3sync"
+            max_workers=cfg.threads, thread_name_prefix="s3syncy"
         )
         self._active_keys: Set[str] = set()
         self._lock = threading.Lock()

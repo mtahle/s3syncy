@@ -21,7 +21,7 @@ from .index import SyncIndex
 from .patterns import ExclusionFilter
 from .watcher import SyncWatcher
 
-log = logging.getLogger("s3sync")
+log = logging.getLogger("s3syncy")
 
 
 # ---------------------------------------------------------------------------
@@ -29,12 +29,12 @@ log = logging.getLogger("s3sync")
 
 
 def _setup_logging(cfg: SyncConfig) -> None:
-    """Configure the root s3sync logger."""
+    """Configure the root s3syncy logger."""
     fmt = logging.Formatter(
         "%(asctime)s  %(levelname)-7s  [%(threadName)s]  %(name)s — %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
-    root = logging.getLogger("s3sync")
+    root = logging.getLogger("s3syncy")
     root.setLevel(getattr(logging, cfg.log_level, logging.INFO))
     root.handlers.clear()
 
@@ -135,7 +135,7 @@ class SyncDaemon:
         )
         self._cfg_watch_thread.start()
 
-        log.info("s3sync daemon starting — watching %s", self.cfg.sync_dirs)
+        log.info("s3syncy daemon starting — watching %s", self.cfg.sync_dirs)
 
         try:
             while not self._shutdown_event.is_set():
@@ -234,9 +234,9 @@ class SyncDaemon:
 
     def _build_runtime(self, cfg: SyncConfig) -> None:
         db_path = (
-            Path(cfg.log_file).parent / ".s3sync_index.db"
+            Path(cfg.log_file).parent / ".s3syncy_index.db"
             if cfg.log_file
-            else Path(".s3sync_index.db")
+            else Path(".s3syncy_index.db")
         )
         self.index = SyncIndex(db_path)
         self.exclusion = ExclusionFilter(cfg.exclude_file)

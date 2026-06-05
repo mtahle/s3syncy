@@ -1,14 +1,14 @@
-"""CLI entry-point for s3sync.
+"""CLI entry-point for s3syncy.
 
 Usage:
-  s3sync start          [-c config.yaml] [--background]
-  s3sync stop|pause|resume|reload [-c config.yaml]
-  s3sync daemon-status  [-c config.yaml]
-  s3sync search         [-c config.yaml] QUERY
-  s3sync ls             [-c config.yaml] PATH
-  s3sync pull           [-c config.yaml] REL DEST
-  s3sync status         [-c config.yaml]
-  s3sync init
+  s3syncy start          [-c config.yaml] [--background]
+  s3syncy stop|pause|resume|reload [-c config.yaml]
+  s3syncy daemon-status  [-c config.yaml]
+  s3syncy search         [-c config.yaml] QUERY
+  s3syncy ls             [-c config.yaml] PATH
+  s3syncy pull           [-c config.yaml] REL DEST
+  s3syncy status         [-c config.yaml]
+  s3syncy init
 """
 
 from __future__ import annotations
@@ -114,7 +114,7 @@ def cmd_start(args) -> None:
         cmd = [
             sys.executable,
             "-m",
-            "s3sync.cli",
+            "s3syncy.cli",
             "start",
             "-c",
             str(config_path),
@@ -209,7 +209,7 @@ def cmd_search(args) -> None:
     from .index import SyncIndex
 
     cfg = load_config(_config_path(args))
-    db = Path(cfg.log_file).parent / ".s3sync_index.db" if cfg.log_file else Path(".s3sync_index.db")
+    db = Path(cfg.log_file).parent / ".s3syncy_index.db" if cfg.log_file else Path(".s3syncy_index.db")
     index = SyncIndex(db)
     results = index.search(args.query, limit=args.limit)
     if not results:
@@ -225,7 +225,7 @@ def cmd_ls(args) -> None:
     from .index import SyncIndex
 
     cfg = load_config(_config_path(args))
-    db = Path(cfg.log_file).parent / ".s3sync_index.db" if cfg.log_file else Path(".s3sync_index.db")
+    db = Path(cfg.log_file).parent / ".s3syncy_index.db" if cfg.log_file else Path(".s3syncy_index.db")
     index = SyncIndex(db)
     results = index.list_folder(args.path, limit=args.limit)
     if not results:
@@ -243,7 +243,7 @@ def cmd_pull(args) -> None:
     from .patterns import ExclusionFilter
 
     cfg = load_config(_config_path(args))
-    db = Path(cfg.log_file).parent / ".s3sync_index.db" if cfg.log_file else Path(".s3sync_index.db")
+    db = Path(cfg.log_file).parent / ".s3syncy_index.db" if cfg.log_file else Path(".s3syncy_index.db")
     index = SyncIndex(db)
     exclusion = ExclusionFilter(cfg.exclude_file)
     engine = SyncEngine(cfg, index, exclusion)
@@ -260,7 +260,7 @@ def cmd_status(args) -> None:
     from .index import SyncIndex
 
     cfg = load_config(_config_path(args))
-    db = Path(cfg.log_file).parent / ".s3sync_index.db" if cfg.log_file else Path(".s3sync_index.db")
+    db = Path(cfg.log_file).parent / ".s3syncy_index.db" if cfg.log_file else Path(".s3syncy_index.db")
     index = SyncIndex(db)
     stats = index.stats()
     print(json.dumps(stats, indent=2))
@@ -293,7 +293,7 @@ def _add_daemon_file_args(sp) -> None:
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
-        prog="s3sync",
+        prog="s3syncy",
         description="Cross-platform S3 file synchronisation daemon.",
     )
     p.add_argument("-V", "--version", action="version", version=f"%(prog)s {__version__}")
