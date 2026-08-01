@@ -105,9 +105,6 @@ class TestMyClass:
 
 ## CI/CD
 
-Tests are automatically run on:
-- Every pull request
-- Every commit to main branch
-- Nightly builds
+CI currently runs import/CLI smoke checks on pull requests (see `.github/workflows/tests.yml`).
 
-See `.github/workflows/tests.yml` for details.
+To run the full test suite in CI, update that workflow to install the dev test dependencies (e.g. `pip install -r requirements-dev.txt`) and execute `pytest` (optionally with coverage).
