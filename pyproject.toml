@@ -59,34 +59,15 @@ warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = false
 
-[tool.pytest.ini_options]
-minversion = "7.0"
-testpaths = ["tests"]
-python_files = ["test_*.py"]
-python_classes = ["Test*"]
-python_functions = ["test_*"]
-addopts = [
-    "-ra",
-    "--strict-markers",
-    "--strict-config",
-    "--showlocals",
-]
-markers = [
-    "unit: Unit tests",
-    "integration: Integration tests",
-    "slow: Tests that take a long time to run",
-]
+[tool.semantic_release]
+version_toml = ["pyproject.toml:project.version"]
+version_variables = ["s3syncy/__init__.py:__version__"]
+branch = "main"
+changelog_file = "CHANGELOG.md"
+build_command = "pip install build && python -m build"
+commit_message = "chore(release): v{version} [skip ci]"
 
-[tool.coverage.run]
-source = ["s3syncy"]
-omit = ["*/tests/*"]
-
-[tool.coverage.report]
-exclude_lines = [
-    "pragma: no cover",
-    "def __repr__",
-    "raise AssertionError",
-    "raise NotImplementedError",
-    "if __name__ == .__main__.:",
-    "if TYPE_CHECKING:",
-]
+[tool.semantic_release.commit_parser_options]
+allowed_tags = ["feat", "fix", "perf", "refactor", "style", "test", "docs", "build", "ci", "chore"]
+minor_tags = ["feat"]
+patch_tags = ["fix", "perf"]
