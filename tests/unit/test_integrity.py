@@ -1,7 +1,6 @@
 """Unit tests for integrity module."""
 
 import hashlib
-import pytest
 
 from s3syncy.integrity import (
     compute_hash,
