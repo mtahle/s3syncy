@@ -47,14 +47,14 @@ class TestBandwidthLimiter:
         # Total 50KB at 100KB/s = ~0.5 seconds
         assert 0.4 < elapsed < 0.7
 
-    def test_small_chunks_no_excessive_waiting(self):
+    def test_small_chunks_no_excessive_waiting(self, monkeypatch):
         """Test that very small chunks don't cause excessive waiting."""
         limiter = BandwidthLimiter(1_000_000)  # 1 MB/s
 
-        start = time.monotonic()
+        sleeps: list[float] = []
+        monkeypatch.setattr(throttle.time, "sleep", lambda s: sleeps.append(s))
+
         for _ in range(10):
             limiter.consume(1000)  # 1KB each
-        elapsed = time.monotonic() - start
 
-        # 10KB at 1MB/s should be very fast
-        assert elapsed < 0.1
+        assert sleeps == []
