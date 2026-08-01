@@ -20,19 +20,20 @@ class TestBandwidthLimiter:
         # Should complete instantly (no throttling)
         assert elapsed < 0.1
 
-    def test_bandwidth_throttling(self):
-        """Test that bandwidth is throttled correctly."""
+    def test_bandwidth_throttling(self, monkeypatch):
+        """Test that bandwidth is throttled correctly (after initial burst)."""
         # 100 KB/s limit
         limiter = BandwidthLimiter(100_000)
 
-        start = time.monotonic()
-        limiter.consume(50_000)  # 50 KB
-        elapsed = time.monotonic() - start
+        # Drain the initial token bucket (BandwidthLimiter starts full).
+        limiter.consume(100_000)
 
-        # Should take approximately 0.5 seconds (50KB at 100KB/s)
-        # Allow some tolerance for test timing
-        assert 0.4 < elapsed < 0.7
+        sleeps: list[float] = []
+        monkeypatch.setattr(throttle.time, "sleep", lambda s: sleeps.append(s))
 
+        limiter.consume(50_000)  # should require ~0.5s of sleep at 100KB/s
+        assert len(sleeps) == 1
+        assert sleeps[0] == pytest.approx(0.5, rel=0.25)
     def test_multiple_consumes(self):
         """Test multiple consume calls."""
         limiter = BandwidthLimiter(100_000)  # 100 KB/s
