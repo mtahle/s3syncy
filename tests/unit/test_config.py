@@ -1,6 +1,5 @@
 """Unit tests for config module."""
 
-import tempfile
 from pathlib import Path
 
 import pytest
