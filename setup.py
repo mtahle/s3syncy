@@ -1,14 +1,19 @@
 from setuptools import setup, find_packages
 import os
+import re
 
 # Read the README file for long description
 here = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(here, "README.md"), encoding="utf-8") as f:
     long_description = f.read()
 
+# Read version from package __init__.py (single source of truth)
+with open(os.path.join(here, "s3syncy", "__init__.py"), encoding="utf-8") as f:
+    version = re.search(r'__version__\s*=\s*["\'](.+?)["\']', f.read()).group(1)
+
 setup(
     name="s3syncy",
-    version="0.1.1",
+    version=version,
     description="Cross-platform, multithreaded S3 file synchronization daemon",
     long_description=long_description,
     long_description_content_type="text/markdown",

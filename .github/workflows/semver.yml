@@ -1,0 +1,34 @@
+name: Semantic Versioning
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    concurrency: release
+    permissions:
+      id-token: write
+      contents: write
+
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Set up Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: "3.10"
+
+    - name: Install python-semantic-release
+      run: pip install python-semantic-release
+
+    - name: Run Semantic Release
+      id: release
+      uses: python-semantic-release/python-semantic-release@v9
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}

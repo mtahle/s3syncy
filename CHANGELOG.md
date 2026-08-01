@@ -7,8 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.1.1] - 2026-08-01
 
-### Fixed
-- Bumped version to resolve PyPI re-upload conflict (file already exists error)
+### Added
+- Semantic versioning workflow (`semver.yml`) triggered on push to `main`
+- `python-semantic-release` configuration in `pyproject.toml` for automated version bumping and changelog generation
+
+### Changed
+- `setup.py` now reads version dynamically from `s3syncy/__init__.py` (single source of truth)
 
 ## [0.1.0] - 2026-03-18
 
