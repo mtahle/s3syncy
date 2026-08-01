@@ -3,8 +3,6 @@
 import pytest
 import s3syncy.throttle as throttle
 
-from s3syncy.throttle import BandwidthLimiter
-
 pytestmark = pytest.mark.unit
 
 class TestBandwidthLimiter:
@@ -12,7 +10,7 @@ class TestBandwidthLimiter:
 
     def test_unlimited_bandwidth(self):
         """Test that 0 limit means unlimited (no throttling)."""
-        limiter = BandwidthLimiter(0)
+        limiter = throttle.BandwidthLimiter(0)
 
         start = time.monotonic()
         limiter.consume(1_000_000)  # 1MB
@@ -24,7 +22,7 @@ class TestBandwidthLimiter:
     def test_bandwidth_throttling(self, monkeypatch):
         """Test that bandwidth is throttled correctly (after initial burst)."""
         # 100 KB/s limit
-        limiter = BandwidthLimiter(100_000)
+        limiter = throttle.BandwidthLimiter(100_000)
 
         # Drain the initial token bucket (BandwidthLimiter starts full).
         limiter.consume(100_000)
@@ -37,7 +35,7 @@ class TestBandwidthLimiter:
         assert sleeps[0] == pytest.approx(0.5, rel=0.25)
     def test_multiple_consumes(self):
         """Test multiple consume calls."""
-        limiter = BandwidthLimiter(100_000)  # 100 KB/s
+        limiter = throttle.BandwidthLimiter(100_000)  # 100 KB/s
 
         start = time.monotonic()
         limiter.consume(25_000)  # 25 KB
@@ -49,7 +47,7 @@ class TestBandwidthLimiter:
 
     def test_small_chunks_no_excessive_waiting(self, monkeypatch):
         """Test that very small chunks don't cause excessive waiting."""
-        limiter = BandwidthLimiter(1_000_000)  # 1 MB/s
+        limiter = throttle.BandwidthLimiter(1_000_000)  # 1 MB/s
 
         sleeps: list[float] = []
         monkeypatch.setattr(throttle.time, "sleep", lambda s: sleeps.append(s))
