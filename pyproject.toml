@@ -64,7 +64,9 @@ version_toml = ["pyproject.toml:project.version"]
 version_variables = ["s3syncy/__init__.py:__version__"]
 branch = "main"
 changelog_file = "CHANGELOG.md"
+tag_format = "v{version}"
 build_command = "pip install build && python -m build"
+upload_to_vcs_release = true
 commit_message = "chore(release): v{version} [skip ci]"
 
 [tool.semantic_release.commit_parser_options]
