@@ -44,13 +44,11 @@ class TestExpandPath:
         assert not str(result).startswith("~")
         assert result.is_absolute()
 
-    def test_expand_env_vars(self):
+    def test_expand_env_vars(self, monkeypatch, tmp_path):
         """Test environment variable expansion."""
-        import os
-        os.environ["TEST_VAR"] = "/tmp/test"
+        monkeypatch.setenv("TEST_VAR", str(tmp_path))
         result = _expand_path("$TEST_VAR/file")
-        assert "TEST_VAR" not in str(result)
-        assert "/tmp/test" in str(result)
+        assert result == (tmp_path / "file").resolve()
 
 
 class TestSyncConfig:
