@@ -1,10 +1,11 @@
 """Unit tests for throttle module."""
 
-import time
 import pytest
+import s3syncy.throttle as throttle
 
 from s3syncy.throttle import BandwidthLimiter
 
+pytestmark = pytest.mark.unit
 
 class TestBandwidthLimiter:
     """Test bandwidth throttling logic."""
