@@ -59,15 +59,4 @@ warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = false
 
-[tool.semantic_release]
-version_toml = ["pyproject.toml:project.version"]
-version_variables = ["s3syncy/__init__.py:__version__"]
-branch = "main"
-changelog_file = "CHANGELOG.md"
-build_command = "pip install build && python -m build"
-commit_message = "chore(release): v{version} [skip ci]"
 
-[tool.semantic_release.commit_parser_options]
-allowed_tags = ["feat", "fix", "perf", "refactor", "style", "test", "docs", "build", "ci", "chore"]
-minor_tags = ["feat"]
-patch_tags = ["fix", "perf"]
