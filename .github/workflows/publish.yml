@@ -37,29 +37,10 @@ jobs:
           path: dist/
           if-no-files-found: error
 
-  # publish-test:
-  #   needs: build
-  #   runs-on: ubuntu-latest
-  #   environment: test-release
-  #   permissions:
-  #     id-token: write  # Required for OIDC
-
-  #   steps:
-  #     - name: Download distribution artifact
-  #       uses: actions/download-artifact@v4.1.3
-  #       with:
-  #         name: dist
-  #         path: dist/
-
-  #     - name: Publish to TestPyPI
-  #       uses: pypa/gh-action-pypi-publish@release/v1
-  #       with:
-  #         repository-url: https://test.pypi.org/legacy/
-  #         skip-existing: true
-  #         verbose: true
+  
 
   publish:
-    needs: publish-test
+    needs: build
     runs-on: ubuntu-latest
     environment: release
     permissions:
