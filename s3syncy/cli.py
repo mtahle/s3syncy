@@ -27,6 +27,10 @@ from typing import Any
 from . import __version__
 
 
+_DEFAULT_CONFIG_FILENAME = "config.yaml"
+_DEFAULT_INDEX_DB_FILENAME = ".s3syncy_index.db"
+
+
 def _config_path(args) -> Path:
     return Path(args.config).resolve()
 
@@ -204,12 +208,18 @@ def cmd_daemon_status(args) -> None:
     print(json.dumps(payload, indent=2))
 
 
+def _index_db_path(cfg) -> Path:
+    if cfg.log_file:
+        return Path(cfg.log_file).parent / _DEFAULT_INDEX_DB_FILENAME
+    return Path(_DEFAULT_INDEX_DB_FILENAME)
+
+
 def cmd_search(args) -> None:
     from .config import load_config
     from .index import SyncIndex
 
     cfg = load_config(_config_path(args))
-    db = Path(cfg.log_file).parent / ".s3syncy_index.db" if cfg.log_file else Path(".s3syncy_index.db")
+    db = _index_db_path(cfg)
     index = SyncIndex(db)
     results = index.search(args.query, limit=args.limit)
     if not results:
@@ -225,7 +235,7 @@ def cmd_ls(args) -> None:
     from .index import SyncIndex
 
     cfg = load_config(_config_path(args))
-    db = Path(cfg.log_file).parent / ".s3syncy_index.db" if cfg.log_file else Path(".s3syncy_index.db")
+    db = _index_db_path(cfg)
     index = SyncIndex(db)
     results = index.list_folder(args.path, limit=args.limit)
     if not results:
@@ -243,7 +253,7 @@ def cmd_pull(args) -> None:
     from .patterns import ExclusionFilter
 
     cfg = load_config(_config_path(args))
-    db = Path(cfg.log_file).parent / ".s3syncy_index.db" if cfg.log_file else Path(".s3syncy_index.db")
+    db = _index_db_path(cfg)
     index = SyncIndex(db)
     exclusion = ExclusionFilter(cfg.exclude_file)
     engine = SyncEngine(cfg, index, exclusion)
@@ -260,7 +270,7 @@ def cmd_status(args) -> None:
     from .index import SyncIndex
 
     cfg = load_config(_config_path(args))
-    db = Path(cfg.log_file).parent / ".s3syncy_index.db" if cfg.log_file else Path(".s3syncy_index.db")
+    db = _index_db_path(cfg)
     index = SyncIndex(db)
     stats = index.stats()
     print(json.dumps(stats, indent=2))
