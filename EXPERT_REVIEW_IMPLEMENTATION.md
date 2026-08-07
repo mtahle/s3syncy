@@ -17,29 +17,29 @@ This document summarizes the implementation of fixes identified in the expert re
 - **Impact**: Ensures consistency across the entire codebase and prevents potential module loading issues
 
 #### Dead Code Removal
-- **Removed**: `run_periodic_scan()` method in `watcher.py:113-121`
-- **Reason**: Method was never called; periodic scans are handled by the daemon's main loop
+- **Removed**: the old periodic-scan path from the watcher implementation
+- **Reason**: The watcher now focuses on filesystem events while the daemon handles periodic full scans
 - **Impact**: Cleaner codebase, reduced maintenance burden
 
 ### 2. Security Improvements (P1) ✅
 
 #### Atomic PID File Writes
 - **Location**: `daemon.py:_write_pid_file()`
-- **Change**: Implemented atomic write pattern (write to temp → rename)
+- **Change**: Implemented atomic writes using a temporary file and `replace()`
 - **Benefit**: Prevents race conditions where another process could hijack the PID file
 - **Code Pattern**:
   ```python
   temp_file = self.pid_file.with_suffix(self.pid_file.suffix + ".tmp")
   temp_file.write_text(json.dumps(payload), encoding="utf-8")
-  temp_file.rename(self.pid_file)  # Atomic on POSIX systems
+  temp_file.replace(self.pid_file)
   ```
 
 ### 3. Error Handling Improvements ✅
 
 #### Database Connection Management
 - **Location**: `index.py:_conn()`
-- **Change**: Added proper cleanup in finally block
-- **Benefit**: Ensures connections are always in a clean state even on errors
+- **Change**: Kept the SQLite connection lifecycle explicit and wrapped it in a context manager so commits/rollbacks remain predictable
+- **Benefit**: Makes transaction handling predictable during normal use and error paths
 
 ### 4. Comprehensive Test Framework (P0) ✅
 
@@ -59,17 +59,13 @@ tests/
 - **Config Module**: Tests for deep merge, path expansion, validation, and loading
 - **Integrity Module**: Tests for MD5/SHA256 hashing, ETag comparison, upload verification
 - **Throttle Module**: Tests for bandwidth limiting logic
-- **Total**: 33 unit tests implemented
+- **Total**: 33 unit tests implemented across config, integrity, and throttle coverage
 
 #### Testing Infrastructure
-- **pytest configuration**: Added to `pyproject.toml`
-- **Test markers**: `unit`, `integration`, `slow`
-- **Coverage configuration**: Set to track coverage with exclusions
-- **Dev dependencies**: Created `requirements-dev.txt` with:
-  - pytest, pytest-cov, pytest-asyncio
-  - moto (for S3 mocking)
-  - Code quality tools (black, isort, mypy, ruff)
-  - Type stubs (boto3-stubs, types-PyYAML)
+- **pytest configuration**: Added in `pyproject.toml` for test discovery
+- **Test layout**: `tests/unit/` for unit coverage and `tests/integration/` for broader workflow tests
+- **Dev dependencies**: `requirements-dev.txt` includes pytest, pytest-cov, pytest-asyncio, and moto
+- **Additional tooling**: black, isort, mypy, ruff, boto3-stubs, and types-PyYAML are also available for local quality checks
 
 ## Issues Not Yet Addressed
 
@@ -117,8 +113,8 @@ pytest tests/unit -m unit
 ```
 
 ### Expected Results:
-- All 33 unit tests should pass
-- Test coverage baseline established
+- The unit test suite should pass locally with the development requirements installed
+- The repository now includes an integration test entry point for S3-compatible backends
 - No breaking changes to existing functionality
 
 ## Impact Assessment
@@ -164,7 +160,7 @@ pytest tests/unit -m unit
 - [x] Dead code removed
 - [x] Security improvements implemented
 - [x] Test framework established
-- [x] Unit tests written and passing
+- [x] Unit tests written and documented
 - [x] Dev dependencies documented
 - [x] No regressions introduced
 - [ ] Database migration documented (to do)

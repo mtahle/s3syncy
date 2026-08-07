@@ -237,13 +237,15 @@ def cmd_ls(args) -> None:
     cfg = load_config(_config_path(args))
     db = _index_db_path(cfg)
     index = SyncIndex(db)
-    results = index.list_folder(args.path, limit=args.limit)
-    if not results:
-        print("No files under that path.")
-        return
-    for r in results:
-        print(f"  {r.rel_path}  ({r.size:,} bytes)  [{r.status}]")
-    index.close()
+    try:
+        results = index.list_folder(args.path, limit=args.limit)
+        if not results:
+            print("No files under that path.")
+            return
+        for r in results:
+            print(f"  {r.rel_path}  ({r.size:,} bytes)  [{r.status}]")
+    finally:
+        index.close()
 
 
 def cmd_pull(args) -> None:
