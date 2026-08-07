@@ -27,7 +27,7 @@ from typing import Any
 from . import __version__
 
 
-_DEFAULT_CONFIG_FILENAME = "config.yaml"
+_unused_DEFAULT_CONFIG_FILENAME = "config.yaml"
 _DEFAULT_INDEX_DB_FILENAME = ".s3syncy_index.db"
 
 
