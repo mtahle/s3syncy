@@ -1,12 +1,14 @@
 """Unit tests for integrity module."""
 
 import hashlib
-
+import pytest
 from s3syncy.integrity import (
     compute_hash,
     s3_etag_matches,
     verify_upload,
 )
+
+pytestmark = pytest.mark.unit
 
 
 class TestComputeHash:

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "release-type": "python",
+  "include-v-in-tag": false,
+  "packages": {
+    ".": {
+      "release-type": "python",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "generic",
+          "path": "s3syncy/__init__.py",
+          "search-value": "\"[0-9]+\\.[0-9]+\\.[0-9]+\"",
+          "replace-value": "\"${version}\""
+        }
+      ]
+    }
+  }
+}

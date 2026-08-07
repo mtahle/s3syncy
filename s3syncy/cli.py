@@ -27,6 +27,11 @@ from typing import Any
 from . import __version__
 
 
+_DEFAULT_CONFIG_FILENAME = "config.yaml"
+_DEFAULT_INDEX_DB_FILENAME = ".s3syncy_index.db"
+_DEFAULT_CONFIG_HELP = "Path to config.yaml"
+
+
 def _config_path(args) -> Path:
     return Path(args.config).resolve()
 
@@ -204,20 +209,30 @@ def cmd_daemon_status(args) -> None:
     print(json.dumps(payload, indent=2))
 
 
+def _index_db_path(cfg) -> Path:
+    if cfg.log_file:
+        return Path(cfg.log_file).parent / _DEFAULT_INDEX_DB_FILENAME
+    return Path(_DEFAULT_INDEX_DB_FILENAME)
+
+
 def cmd_search(args) -> None:
     from .config import load_config
     from .index import SyncIndex
 
     cfg = load_config(_config_path(args))
-    db = Path(cfg.log_file).parent / ".s3syncy_index.db" if cfg.log_file else Path(".s3syncy_index.db")
+    db = _index_db_path(cfg)
     index = SyncIndex(db)
-    results = index.search(args.query, limit=args.limit)
-    if not results:
-        print("No results.")
-        return
-    for r in results:
-        print(f"  {r.rel_path}  ({r.size:,} bytes)  [{r.status}]  s3://{cfg.s3_bucket}/{r.s3_key}")
-    index.close()
+    try:
+        results = index.search(args.query, limit=args.limit)
+        if not results:
+            print("No results.")
+            return
+        for r in results:
+            print(
+                f"  {r.rel_path}  ({r.size:,} bytes)  [{r.status}]  s3://{cfg.s3_bucket}/{r.s3_key}"
+            )
+    finally:
+        index.close()
 
 
 def cmd_ls(args) -> None:
@@ -225,15 +240,17 @@ def cmd_ls(args) -> None:
     from .index import SyncIndex
 
     cfg = load_config(_config_path(args))
-    db = Path(cfg.log_file).parent / ".s3syncy_index.db" if cfg.log_file else Path(".s3syncy_index.db")
+    db = _index_db_path(cfg)
     index = SyncIndex(db)
-    results = index.list_folder(args.path, limit=args.limit)
-    if not results:
-        print("No files under that path.")
-        return
-    for r in results:
-        print(f"  {r.rel_path}  ({r.size:,} bytes)  [{r.status}]")
-    index.close()
+    try:
+        results = index.list_folder(args.path, limit=args.limit)
+        if not results:
+            print("No files under that path.")
+            return
+        for r in results:
+            print(f"  {r.rel_path}  ({r.size:,} bytes)  [{r.status}]")
+    finally:
+        index.close()
 
 
 def cmd_pull(args) -> None:
@@ -243,7 +260,7 @@ def cmd_pull(args) -> None:
     from .patterns import ExclusionFilter
 
     cfg = load_config(_config_path(args))
-    db = Path(cfg.log_file).parent / ".s3syncy_index.db" if cfg.log_file else Path(".s3syncy_index.db")
+    db = _index_db_path(cfg)
     index = SyncIndex(db)
     exclusion = ExclusionFilter(cfg.exclude_file)
     engine = SyncEngine(cfg, index, exclusion)
@@ -260,7 +277,7 @@ def cmd_status(args) -> None:
     from .index import SyncIndex
 
     cfg = load_config(_config_path(args))
-    db = Path(cfg.log_file).parent / ".s3syncy_index.db" if cfg.log_file else Path(".s3syncy_index.db")
+    db = _index_db_path(cfg)
     index = SyncIndex(db)
     stats = index.stats()
     print(json.dumps(stats, indent=2))
@@ -286,7 +303,7 @@ def cmd_init(args) -> None:
 
 
 def _add_daemon_file_args(sp) -> None:
-    sp.add_argument("-c", "--config", default="config.yaml", help="Path to config.yaml")
+    sp.add_argument("-c", "--config", default=_DEFAULT_CONFIG_FILENAME, help=_DEFAULT_CONFIG_HELP)
     sp.add_argument("--pid-file", default="", help="Path to daemon PID file")
     sp.add_argument("--state-file", default="", help="Path to daemon state JSON file")
 
@@ -318,25 +335,25 @@ def build_parser() -> argparse.ArgumentParser:
 
     # search
     sp = sub.add_parser("search", help="Search the local file index")
-    sp.add_argument("-c", "--config", default="config.yaml")
+    sp.add_argument("-c", "--config", default=_DEFAULT_CONFIG_FILENAME)
     sp.add_argument("query", help="Search term (supports prefix matching)")
     sp.add_argument("-n", "--limit", type=int, default=50)
 
     # ls
     sp = sub.add_parser("ls", help="List files under a path prefix")
-    sp.add_argument("-c", "--config", default="config.yaml")
+    sp.add_argument("-c", "--config", default=_DEFAULT_CONFIG_FILENAME)
     sp.add_argument("path", help="Folder prefix, e.g. 'photos/2024'")
     sp.add_argument("-n", "--limit", type=int, default=200)
 
     # pull
     sp = sub.add_parser("pull", help="Download a single file from S3")
-    sp.add_argument("-c", "--config", default="config.yaml")
+    sp.add_argument("-c", "--config", default=_DEFAULT_CONFIG_FILENAME)
     sp.add_argument("rel_path", help="Relative path as stored in the index")
     sp.add_argument("dest", help="Local destination path")
 
     # status
     sp = sub.add_parser("status", help="Show index stats")
-    sp.add_argument("-c", "--config", default="config.yaml")
+    sp.add_argument("-c", "--config", default=_DEFAULT_CONFIG_FILENAME)
 
     # init
     sub.add_parser("init", help="Generate starter config.yaml and .syncignore")

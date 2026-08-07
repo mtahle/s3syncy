@@ -150,6 +150,16 @@ class SyncEngine:
 
     def _scan_remote(self, sync_dir: Path) -> None:
         """Detect remote-only files and download (or record) them."""
+        remote_keys = self._list_remote_keys(sync_dir)
+        if remote_keys is None:
+            return
+
+        futures = []
+        futures.extend(self._scan_remote_existing(sync_dir, remote_keys))
+        futures.extend(self._scan_remote_missing(sync_dir, remote_keys))
+        self._wait(futures)
+
+    def _list_remote_keys(self, sync_dir: Path) -> Optional[dict[str, tuple[str, dict]]]:
         scope_prefix = self._scope_prefix(sync_dir)
         scoped_key_prefix = f"{scope_prefix}/" if scope_prefix else ""
         prefix = self._make_key(scoped_key_prefix)
@@ -164,16 +174,19 @@ class SyncEngine:
                         remote_keys[self._scoped_rel(rel, sync_dir)] = (rel, obj)
         except ClientError as exc:
             log.error("Failed to list remote objects: %s", exc)
-            return
+            return None
+        return remote_keys
 
+    def _scan_remote_existing(
+        self, sync_dir: Path, remote_keys: dict[str, tuple[str, dict]]
+    ) -> list:
         futures = []
         for scoped_rel, (local_rel, obj) in remote_keys.items():
             rec = self.index.get(scoped_rel)
             local_path = sync_dir / local_rel
             if local_path.exists():
-                # Both exist — potential conflict.
                 if rec and rec.status == "synced":
-                    continue  # already synced and unchanged
+                    continue
                 futures.append(
                     self._submit(
                         self._resolve_and_act,
@@ -185,12 +198,15 @@ class SyncEngine:
                     )
                 )
             else:
-                # Remote only — download.
                 futures.append(
                     self._submit(self._download_one, local_rel, scoped_rel, sync_dir, obj)
                 )
+        return futures
 
-        # Self-heal: if remote objects were deleted out-of-band, restore from local.
+    def _scan_remote_missing(
+        self, sync_dir: Path, remote_keys: dict[str, tuple[str, dict]]
+    ) -> list:
+        futures = []
         for rec in self.index.all_records(sync_root=str(sync_dir)):
             scoped_rel = rec.rel_path
             local_rel = self._local_rel_from_scoped(scoped_rel, sync_dir)
@@ -201,7 +217,6 @@ class SyncEngine:
 
             local_path = sync_dir / local_rel
             if not local_path.is_file():
-                # Drop stale index rows that no longer exist on either side.
                 self.index.delete(scoped_rel)
                 continue
 
@@ -209,8 +224,7 @@ class SyncEngine:
                 "Remote object missing for %s — restoring from local copy", local_rel
             )
             futures.append(self._submit(self._upload_one, local_path, local_rel, sync_dir))
-
-        self._wait(futures)
+        return futures
 
     # ── internal: single-file operations ────────────────────────────────
 
@@ -220,7 +234,6 @@ class SyncEngine:
         scoped_rel = self._scoped_rel(rel, sync_root)
         s3_key = self._make_key(scoped_rel)
 
-        # Deduplicate concurrent work on the same key.
         with self._lock:
             if s3_key in self._active_keys:
                 return
@@ -228,60 +241,88 @@ class SyncEngine:
         try:
             stat = local_path.stat()
             local_hash = compute_hash(local_path, self.cfg.integrity_algorithm)
-
-            # Check if remote is identical (skip upload).
             rec = self.index.get(scoped_rel)
-            if rec and rec.local_hash == local_hash and rec.status == "synced":
-                log.debug("Skipping (unchanged hash) %s", rel)
+            if self._should_skip_upload(rec, local_hash, rel):
                 return
 
-            # Check for conflict with remote.
             remote_meta = self._head_object(s3_key)
-            if remote_meta and rec and rec.s3_etag != remote_meta.get("ETag", ""):
-                action = self._resolve_conflict(local_path, rel, stat, local_hash, remote_meta)
-                if action != Action.UPLOAD:
-                    if action == Action.DOWNLOAD:
-                        self._download_one(rel, scoped_rel, sync_root, remote_meta)
-                    return
+            if self._should_resolve_conflict(remote_meta, rec, local_path, rel, stat, local_hash, scoped_rel, sync_root):
+                return
 
-            # Upload.
-            extra = {}
-            if self.cfg.integrity_algorithm == "sha256":
-                extra["ChecksumAlgorithm"] = "SHA256"
-            cb = _TransferCallback(self._ul, rel)
-            self._s3.upload_file(
-                str(local_path), self.cfg.s3_bucket, s3_key,
-                Callback=cb, ExtraArgs=extra,
-                Config=boto3.s3.transfer.TransferConfig(
-                    multipart_chunksize=self.cfg.chunk_size,
-                    max_concurrency=1,  # per-file; pool handles parallelism
-                ),
-            )
-            log.info("Uploaded %s (%s bytes)", rel, stat.st_size)
-
-            # Integrity check.
-            if self.cfg.integrity_enabled:
-                self._check_integrity(
-                    local_path, s3_key, scoped_rel, sync_root, stat, local_hash
-                )
-            else:
-                head = self._head_object(s3_key) or {}
-                self.index.upsert(
-                    scoped_rel, str(sync_root),
-                    size=stat.st_size,
-                    local_mtime=stat.st_mtime,
-                    local_hash=local_hash,
-                    s3_key=s3_key,
-                    s3_etag=head.get("ETag", ""),
-                    s3_mtime=str(head.get("LastModified", "")),
-                    status="synced",
-                )
+            self._perform_upload(local_path, rel, s3_key, stat, local_hash, scoped_rel, sync_root)
         except Exception as exc:
             log.error("Upload error %s: %s", rel, exc)
             self.index.upsert(scoped_rel, str(sync_root), status="error")
         finally:
             with self._lock:
                 self._active_keys.discard(s3_key)
+
+    @staticmethod
+    def _should_skip_upload(rec, local_hash: str, rel: str) -> bool:
+        if rec and rec.local_hash == local_hash and rec.status == "synced":
+            log.debug("Skipping (unchanged hash) %s", rel)
+            return True
+        return False
+
+    def _should_resolve_conflict(
+        self,
+        remote_meta: Optional[dict],
+        rec,
+        local_path: Path,
+        rel: str,
+        stat: os.stat_result,
+        local_hash: str,
+        scoped_rel: str,
+        sync_root: Path,
+    ) -> bool:
+        if remote_meta and rec and rec.s3_etag != remote_meta.get("ETag", ""):
+            action = self._resolve_conflict(local_path, rel, stat, local_hash, remote_meta)
+            if action != Action.UPLOAD:
+                if action == Action.DOWNLOAD:
+                    self._download_one(rel, scoped_rel, sync_root, remote_meta)
+                return True
+        return False
+
+    def _perform_upload(
+        self,
+        local_path: Path,
+        rel: str,
+        s3_key: str,
+        stat: os.stat_result,
+        local_hash: str,
+        scoped_rel: str,
+        sync_root: Path,
+    ) -> None:
+        extra = {}
+        if self.cfg.integrity_algorithm == "sha256":
+            extra["ChecksumAlgorithm"] = "SHA256"
+        cb = _TransferCallback(self._ul, rel)
+        self._s3.upload_file(
+            str(local_path), self.cfg.s3_bucket, s3_key,
+            Callback=cb, ExtraArgs=extra,
+            Config=boto3.s3.transfer.TransferConfig(
+                multipart_chunksize=self.cfg.chunk_size,
+                max_concurrency=1,
+            ),
+        )
+        log.info("Uploaded %s (%s bytes)", rel, stat.st_size)
+
+        if self.cfg.integrity_enabled:
+            self._check_integrity(local_path, s3_key, scoped_rel, sync_root, stat, local_hash)
+            return
+
+        head = self._head_object(s3_key) or {}
+        self.index.upsert(
+            scoped_rel,
+            str(sync_root),
+            size=stat.st_size,
+            local_mtime=stat.st_mtime,
+            local_hash=local_hash,
+            s3_key=s3_key,
+            s3_etag=head.get("ETag", ""),
+            s3_mtime=str(head.get("LastModified", "")),
+            status="synced",
+        )
 
     def _download_one(
         self, rel: str, scoped_rel: str, sync_root: Path, remote_meta: dict
