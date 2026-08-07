@@ -160,11 +160,11 @@ pip install -r requirements-dev.txt
 # Run all tests
 pytest
 
-# Run unit tests only
-pytest tests/unit -m unit
+# Run with coverage
+pytest --cov=s3syncy --cov-report=html
 
-# Run integration tests (requires Docker or a reachable MinIO service)
-pytest tests/integration
+# Run only unit tests
+pytest tests/unit -m unit
 
 # Run specific test file
 pytest tests/unit/test_config.py

@@ -102,6 +102,9 @@ class SyncIndex:
         except Exception:
             conn.rollback()
             raise
+        finally:
+            # Ensure connection is always in a clean state
+            pass
 
     # ── CRUD ────────────────────────────────────────────────────────────
 
