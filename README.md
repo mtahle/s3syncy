@@ -164,7 +164,7 @@ pytest
 pytest --cov=s3syncy --cov-report=html
 
 # Run only unit tests
-pytest tests/unit -m unit
+pytest tests/unit
 
 # Run specific test file
 pytest tests/unit/test_config.py

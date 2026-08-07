@@ -13,8 +13,8 @@ This document summarizes the implementation of fixes identified in the expert re
 - **Fixed**: Program name in `cli.py:296` (`s3sync` → `s3syncy`)
 - **Fixed**: Logger name in `daemon.py:24` (`s3sync` → `s3syncy`)
 - **Fixed**: Thread name prefix in `engine.py:71` (`s3sync` → `s3syncy`)
-- **Fixed**: Database filename (`.s3sync_index.db` → `.s3syncy_index.db`) throughout codebase
-- **Impact**: Ensures consistency across the entire codebase and prevents potential module loading issues
+- **Fixed**: Database filename used by runtime code paths (`.s3sync_index.db` → `.s3syncy_index.db`) in CLI/daemon/index flows
+- **Impact**: Improves naming consistency in the active runtime paths; a few legacy docs/ignore references may still need follow-up cleanup
 
 #### Dead Code Removal
 - **Removed**: the old periodic-scan path from the watcher implementation
@@ -25,7 +25,7 @@ This document summarizes the implementation of fixes identified in the expert re
 
 #### Atomic PID File Writes
 - **Location**: `daemon.py:_write_pid_file()`
-- **Change**: Implemented atomic writes using a temporary file and `replace()`
+- **Change**: Implemented atomic writes using a temporary file and `Path.replace()`
 - **Benefit**: Prevents race conditions where another process could hijack the PID file
 - **Code Pattern**:
   ```python
