@@ -1,6 +1,10 @@
 name: Publish to PyPI
 
 on:
+  workflow_run:
+    workflows: ["Integration Tests", "Sonar Analysis"]
+    types: [completed]
+    branches: [main]
   release:
     types: [published]
 
@@ -10,6 +14,43 @@ env:
   PYTHON_VERSION: "3.10"
 
 jobs:
+  gate:
+    name: Verify release gate
+    if: ${{ github.event_name == 'release' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event_name == 'release' && github.event.release.tag_name || github.sha }}
+
+      - name: Extract version
+        id: version
+        shell: bash
+        run: |
+          version=$(python3 - <<'PY'
+          from pathlib import Path
+          import re
+          text = Path('s3syncy/__init__.py').read_text(encoding='utf-8')
+          m = re.search(r'__version__\s*=\s*"([^"]+)"', text)
+          if not m:
+              raise SystemExit('version not found')
+          print(m.group(1))
+          PY
+          )
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Validate release tag
+        if: ${{ github.event_name == 'release' }}
+        shell: bash
+        run: |
+          if [[ "${{ github.ref_name }}" != "${{ steps.version.outputs.version }}" ]]; then
+            echo "Release tag '${{ github.ref_name }}' does not match source version '${{ steps.version.outputs.version }}'"
+            exit 1
+          fi
+
   # Job 1 — extract __version__ from source and verify it matches the release tag
   get-version:
     name: Get and verify package version
@@ -19,7 +60,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ github.event_name == 'release' && github.event.release.tag_name || github.sha }}
 
       - name: Read version file
         id: read-file
@@ -59,7 +100,7 @@ jobs:
   # (keeps the privileged OIDC publish jobs isolated from build scripts)
   build:
     name: Build distribution
-    needs: get-version
+    needs: [gate, get-version]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -91,50 +132,56 @@ jobs:
   # Job 3 — always publish to PyPI Test (both releases and pre-releases)
   deploy-to-pypi-test:
     name: Deploy to PyPI Test
-    needs: [get-version, build]
+    needs: [gate, get-version, build]
     runs-on: ubuntu-latest
-    environment:
-      name: release-test
-      url: https://test.pypi.org/p/s3syncy
-    permissions:
-      id-token: write
-      actions: read
+     environment:
+       name: release-test
+       url: https://test.pypi.org/p/s3syncy
+     permissions:
+       contents: read
+       actions: read
 
-    steps:
-      - name: Download distribution artifact
-        uses: actions/download-artifact@v8.0.1
-        with:
-          name: dist
-          path: dist/
+     steps:
+       - name: Download distribution artifact
+         uses: actions/download-artifact@v8.0.1
+         with:
+           name: dist
+           path: dist/
 
-      - name: Publish to PyPI Test
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          repository-url: https://test.pypi.org/legacy/
-          verbose: true
+       - name: Publish to PyPI Test
+         uses: pypa/gh-action-pypi-publish@release/v1
+         with:
+           repository-url: https://test.pypi.org/legacy/
+           verbose: true
+           password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+
+
 
   # Job 4 — publish to production PyPI only for full (non-pre) releases
   deploy-to-pypi-prod:
     name: Deploy to PyPI
-    needs: [get-version, build, deploy-to-pypi-test]
+    needs: [gate, get-version, build, deploy-to-pypi-test]
     if: ${{ !github.event.release.prerelease }}
     runs-on: ubuntu-latest
-    environment:
-      name: release
-      url: https://pypi.org/p/s3syncy
-    permissions:
-      id-token: write
+     environment:
+       name: release
+       url: https://pypi.org/p/s3syncy
+     permissions:
+       contents: read
 
-    steps:
-      - name: Download distribution artifact
-        uses: actions/download-artifact@v8.0.1
-        with:
-          name: dist
-          path: dist/
+     steps:
+       - name: Download distribution artifact
+         uses: actions/download-artifact@v8.0.1
+         with:
+           name: dist
+           path: dist/
 
-      - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          verbose: true
+       - name: Publish to PyPI
+         uses: pypa/gh-action-pypi-publish@release/v1
+         with:
+           verbose: true
+           password: ${{ secrets.PYPI_API_TOKEN }}
+
+
 
 
