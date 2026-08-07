@@ -5,14 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.1] - 2026-08-01
+## [Unreleased]
 
 ### Added
-- Semantic versioning workflow (`semver.yml`) triggered on push to `main`
-- `python-semantic-release` configuration in `pyproject.toml` for automated version bumping and changelog generation
+- Initial test infrastructure and developer workflow documentation
+- Local integration test support for S3-compatible storage via MinIO
 
 ### Changed
-- `setup.py` now reads version dynamically from `s3syncy/__init__.py` (single source of truth)
+- Standardized runtime naming to `s3syncy` across CLI, daemon logging, thread names, and index DB files
+- Made daemon PID file writes atomic for safer startup/shutdown handling
 
 ## [0.1.0] - 2026-03-18
 
