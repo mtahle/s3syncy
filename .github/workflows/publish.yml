@@ -35,22 +35,25 @@ jobs:
           regex: ${{ env.REGEX_PATTERN }}
           flags: gim
 
-      - name: Cancel if version string not found in source file
-        if: ${{ steps.regex.outputs.group1 == '' }}
-        uses: andymckay/cancel-action@0.5
+      - name: Fail fast if release tag does not match source version
+        shell: bash
+        run: |
+          version="${{ steps.regex.outputs.group1 }}"
 
-      - name: Cancel if release is not a tagged commit
-        if: ${{ github.ref_type != 'tag' }}
-        uses: andymckay/cancel-action@0.5
+          if [[ -z "$version" ]]; then
+            echo "::error::Could not find __version__ in ${{ env.SOURCE_FILE }}"
+            exit 1
+          fi
 
-      - name: Cancel if release tag does not match source version
-        if: ${{ github.ref_name != steps.regex.outputs.group1 }}
-        uses: andymckay/cancel-action@0.5
+          if [[ "${{ github.ref_type }}" != "tag" ]]; then
+            echo "::error::This workflow must run on a tag ref (ref_type=${{ github.ref_type }})"
+            exit 1
+          fi
 
-      # Give the cancellation actions above enough time to propagate
-      - name: Wait for cancellation
-        if: ${{ steps.regex.outputs.group1 == '' || github.ref_type != 'tag' || github.ref_name != steps.regex.outputs.group1 }}
-        run: sleep 60
+          if [[ "${{ github.ref_name }}" != "$version" ]]; then
+            echo "::error::Release tag '${{ github.ref_name }}' does not match source version '$version'"
+            exit 1
+          fi
 
   # Job 2 — build the distribution once; both publish jobs reuse this artifact
   # (keeps the privileged OIDC publish jobs isolated from build scripts)
