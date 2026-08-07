@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2](https://github.com/mtahle/s3syncy/compare/0.1.1...0.1.2) (2026-08-07)
+
+
+### Bug Fixes
+
+* correct publish workflow indentation ([f0ebe1e](https://github.com/mtahle/s3syncy/commit/f0ebe1e96c41719306f37ad75836d1b49e8fc37f))
+* make publish workflow validate tags correctly ([4dda4c1](https://github.com/mtahle/s3syncy/commit/4dda4c1ca3fb10fc5ddf24dfb4ff76b9290031b6))
+* use PyPI API tokens for publish workflow ([1fc1d50](https://github.com/mtahle/s3syncy/commit/1fc1d503efe9c3ffd660d7b87b8d3eed3827a780))
+
 ## [Unreleased]
 
 ### Added
