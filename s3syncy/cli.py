@@ -29,6 +29,7 @@ from . import __version__
 
 _unused_DEFAULT_CONFIG_FILENAME = "config.yaml"
 _DEFAULT_INDEX_DB_FILENAME = ".s3syncy_index.db"
+_DEFAULT_CONFIG_HELP = "Path to config.yaml"
 
 
 def _config_path(args) -> Path:
@@ -298,7 +299,7 @@ def cmd_init(args) -> None:
 
 
 def _add_daemon_file_args(sp) -> None:
-    sp.add_argument("-c", "--config", default="config.yaml", help="Path to config.yaml")
+    sp.add_argument("-c", "--config", default=_DEFAULT_CONFIG_FILENAME, help=_DEFAULT_CONFIG_HELP)
     sp.add_argument("--pid-file", default="", help="Path to daemon PID file")
     sp.add_argument("--state-file", default="", help="Path to daemon state JSON file")
 
@@ -330,25 +331,25 @@ def build_parser() -> argparse.ArgumentParser:
 
     # search
     sp = sub.add_parser("search", help="Search the local file index")
-    sp.add_argument("-c", "--config", default="config.yaml")
+    sp.add_argument("-c", "--config", default=_DEFAULT_CONFIG_FILENAME)
     sp.add_argument("query", help="Search term (supports prefix matching)")
     sp.add_argument("-n", "--limit", type=int, default=50)
 
     # ls
     sp = sub.add_parser("ls", help="List files under a path prefix")
-    sp.add_argument("-c", "--config", default="config.yaml")
+    sp.add_argument("-c", "--config", default=_DEFAULT_CONFIG_FILENAME)
     sp.add_argument("path", help="Folder prefix, e.g. 'photos/2024'")
     sp.add_argument("-n", "--limit", type=int, default=200)
 
     # pull
     sp = sub.add_parser("pull", help="Download a single file from S3")
-    sp.add_argument("-c", "--config", default="config.yaml")
+    sp.add_argument("-c", "--config", default=_DEFAULT_CONFIG_FILENAME)
     sp.add_argument("rel_path", help="Relative path as stored in the index")
     sp.add_argument("dest", help="Local destination path")
 
     # status
     sp = sub.add_parser("status", help="Show index stats")
-    sp.add_argument("-c", "--config", default="config.yaml")
+    sp.add_argument("-c", "--config", default=_DEFAULT_CONFIG_FILENAME)
 
     # init
     sub.add_parser("init", help="Generate starter config.yaml and .syncignore")

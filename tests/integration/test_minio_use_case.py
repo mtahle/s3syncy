@@ -1,8 +1,6 @@
 import os
 import subprocess
-import sys
 import time
-from pathlib import Path
 
 import boto3
 import pytest
@@ -17,11 +15,12 @@ from s3syncy.patterns import ExclusionFilter
 @pytest.fixture(scope="module")
 def minio_service():
     bucket = "test-bucket"
-    access_key = "minioadmin"
-    secret_key = "minioadmin"
+    access_key = os.environ.get("AWS_ACCESS_KEY_ID", "minioadmin")
+    secret_key = os.environ.get("AWS_SECRET_ACCESS_KEY", "minioadmin")
     host = "127.0.0.1"
     port = 9000
     endpoint = f"http://{host}:{port}"
+    region = os.environ.get("AWS_DEFAULT_REGION", "us-east-1")
 
     container_name = "s3syncy-minio-test"
     subprocess.run(
@@ -65,7 +64,7 @@ def minio_service():
                     endpoint_url=endpoint,
                     aws_access_key_id=access_key,
                     aws_secret_access_key=secret_key,
-                    region_name="us-east-1",
+                    region_name=region,
                 )
                 client.list_buckets()
                 break
@@ -92,7 +91,7 @@ def temp_sync_env(tmp_path, minio_service):
                 "sync_dirs": [str(sync_dir)],
                 "s3": {
                     "bucket": bucket,
-                    "region": "us-east-1",
+                    "region": os.environ.get("AWS_DEFAULT_REGION", "us-east-1"),
                     "endpoint_url": endpoint,
                     "profile": "",
                 },
@@ -132,10 +131,8 @@ def temp_sync_env(tmp_path, minio_service):
 
 
 def test_minio_use_case_upload_list_search_pull(temp_sync_env):
-    cfg = temp_sync_env["cfg"]
     index = temp_sync_env["index"]
     engine = temp_sync_env["engine"]
-    sync_dir = temp_sync_env["sync_dir"]
     tmp_path = temp_sync_env["tmp_path"]
 
     engine.full_scan()
@@ -157,12 +154,13 @@ def test_minio_use_case_upload_list_search_pull(temp_sync_env):
     client = boto3.client(
         "s3",
         endpoint_url=temp_sync_env["endpoint"],
-        aws_access_key_id="minioadmin",
-        aws_secret_access_key="minioadmin",
-        region_name="us-east-1",
+        aws_access_key_id=os.environ.get("AWS_ACCESS_KEY_ID", "minioadmin"),
+        aws_secret_access_key=os.environ.get("AWS_SECRET_ACCESS_KEY", "minioadmin"),
+        region_name=os.environ.get("AWS_DEFAULT_REGION", "us-east-1"),
     )
-    objects = client.list_objects_v2(Bucket=temp_sync_env["bucket"])
-    keys = [obj["Key"] for obj in objects.get("Contents", [])]
+    paginator = client.get_paginator("list_objects_v2")
+    objects = paginator.paginate(Bucket=temp_sync_env["bucket"])
+    keys = [obj["Key"] for page in objects for obj in page.get("Contents", [])]
     assert any(key.endswith("hello.txt") for key in keys)
     assert any(key.endswith("nested/report.txt") for key in keys)
 
