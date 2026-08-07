@@ -33,7 +33,19 @@ jobs:
         pip install -r requirements.txt
         pip install -e .
 
+    - name: Check Sonar configuration
+      id: sonar-config
+      shell: bash
+      run: |
+        if [ -n "${{ secrets.SONAR_TOKEN }}" ] && [ -n "${{ secrets.SONAR_HOST_URL }}" ]; then
+          echo "enabled=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "enabled=false" >> "$GITHUB_OUTPUT"
+          echo "Skipping Sonar scan because SONAR_TOKEN and/or SONAR_HOST_URL are not configured."
+        fi
+
     - name: Run Sonar scan
+      if: steps.sonar-config.outputs.enabled == 'true'
       uses: SonarSource/sonarqube-scan-action@v8
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
