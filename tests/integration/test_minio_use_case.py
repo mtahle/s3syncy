@@ -1,10 +1,12 @@
 import os
+import shutil
 import subprocess
 import time
 
 import boto3
 import pytest
 import yaml
+from moto import mock_aws
 
 from s3syncy.config import load_config
 from s3syncy.engine import SyncEngine
@@ -22,61 +24,68 @@ def minio_service():
     endpoint = f"http://{host}:{port}"
     region = os.environ.get("AWS_DEFAULT_REGION", "us-east-1")
 
-    container_name = "s3syncy-minio-test"
-    subprocess.run(
-        [
-            "docker",
-            "rm",
-            "-f",
-            container_name,
-        ],
-        check=False,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
-    subprocess.run(
-        [
-            "docker",
-            "run",
-            "-d",
-            "--name",
-            container_name,
-            "-p",
-            f"{port}:9000",
-            "-e",
-            f"MINIO_ROOT_USER={access_key}",
-            "-e",
-            f"MINIO_ROOT_PASSWORD={secret_key}",
-            "minio/minio:RELEASE.2024-10-02T17-50-41Z",
-            "server",
-            "/data",
-        ],
-        check=True,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
+    docker_available = shutil.which("docker") is not None
+    if docker_available:
+        container_name = "s3syncy-minio-test"
+        subprocess.run(
+            ["docker", "rm", "-f", container_name],
+            check=False,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        try:
+            subprocess.run(
+                [
+                    "docker",
+                    "run",
+                    "-d",
+                    "--name",
+                    container_name,
+                    "-p",
+                    f"{port}:9000",
+                    "-e",
+                    f"MINIO_ROOT_USER={access_key}",
+                    "-e",
+                    f"MINIO_ROOT_PASSWORD={secret_key}",
+                    "minio/minio:RELEASE.2024-10-02T17-50-41Z",
+                    "server",
+                    "/data",
+                ],
+                check=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            for _ in range(40):
+                try:
+                    client = boto3.client(
+                        "s3",
+                        endpoint_url=endpoint,
+                        aws_access_key_id=access_key,
+                        aws_secret_access_key=secret_key,
+                        region_name=region,
+                    )
+                    client.list_buckets()
+                    break
+                except Exception:
+                    time.sleep(1)
+            else:
+                raise RuntimeError("MinIO did not become ready")
 
-    try:
-        for _ in range(40):
-            try:
-                client = boto3.client(
-                    "s3",
-                    endpoint_url=endpoint,
-                    aws_access_key_id=access_key,
-                    aws_secret_access_key=secret_key,
-                    region_name=region,
-                )
-                client.list_buckets()
-                break
-            except Exception:
-                time.sleep(1)
-        else:
-            raise RuntimeError("MinIO did not become ready")
+            client.create_bucket(Bucket=bucket)
+            yield endpoint, access_key, secret_key, bucket
+        finally:
+            subprocess.run(["docker", "rm", "-f", container_name], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return
 
+    with mock_aws():
+        client = boto3.client(
+            "s3",
+            region_name=region,
+            aws_access_key_id=access_key,
+            aws_secret_access_key=secret_key,
+        )
         client.create_bucket(Bucket=bucket)
         yield endpoint, access_key, secret_key, bucket
-    finally:
-        subprocess.run(["docker", "rm", "-f", container_name], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
 @pytest.fixture()
