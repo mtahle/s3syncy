@@ -95,6 +95,7 @@ jobs:
       url: https://test.pypi.org/p/s3syncy
     permissions:
       id-token: write
+      actions: read
 
     steps:
       - name: Download distribution artifact
