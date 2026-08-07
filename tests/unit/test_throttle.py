@@ -45,7 +45,7 @@ class TestBandwidthLimiter:
 
         # Total 50KB at 100KB/s = ~0.5 seconds
         assert 0.4 < elapsed < 0.7
-    def test_multiple_consumes(self, monkeypatch):
+    def test_multiple_consumes_no_sleep_within_bucket(self, monkeypatch):
         """Test multiple consume calls."""
         limiter = throttle.BandwidthLimiter(100_000)  # 100 KB/s
         sleeps: list[float] = []
