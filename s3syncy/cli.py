@@ -222,13 +222,17 @@ def cmd_search(args) -> None:
     cfg = load_config(_config_path(args))
     db = _index_db_path(cfg)
     index = SyncIndex(db)
-    results = index.search(args.query, limit=args.limit)
-    if not results:
-        print("No results.")
-        return
-    for r in results:
-        print(f"  {r.rel_path}  ({r.size:,} bytes)  [{r.status}]  s3://{cfg.s3_bucket}/{r.s3_key}")
-    index.close()
+    try:
+        results = index.search(args.query, limit=args.limit)
+        if not results:
+            print("No results.")
+            return
+        for r in results:
+            print(
+                f"  {r.rel_path}  ({r.size:,} bytes)  [{r.status}]  s3://{cfg.s3_bucket}/{r.s3_key}"
+            )
+    finally:
+        index.close()
 
 
 def cmd_ls(args) -> None:
