@@ -50,9 +50,11 @@ jobs:
           done
           exit 1
 
-      - name: Run integration tests
-        env:
-          AWS_ACCESS_KEY_ID: minioadmin
-          AWS_SECRET_ACCESS_KEY: minioadmin
-          AWS_DEFAULT_REGION: us-east-1
-        run: pytest -q tests/integration
+       - name: Run integration tests
+         env:
+           AWS_ACCESS_KEY_ID: minioadmin
+           AWS_SECRET_ACCESS_KEY: minioadmin
+           AWS_DEFAULT_REGION: us-east-1
+           MINIO_ENDPOINT_URL: http://127.0.0.1:9000
+         run: pytest -q tests/integration
+

@@ -6,6 +6,7 @@ import time
 import boto3
 import pytest
 import yaml
+from botocore.exceptions import ClientError
 from moto import mock_aws
 
 from s3syncy.config import load_config
@@ -23,6 +24,27 @@ def minio_service():
     port = 9000
     endpoint = f"http://{host}:{port}"
     region = os.environ.get("AWS_DEFAULT_REGION", "us-east-1")
+
+    endpoint_url = os.environ.get("MINIO_ENDPOINT_URL")
+    if endpoint_url:
+        try:
+            client = boto3.client(
+                "s3",
+                endpoint_url=endpoint_url,
+                aws_access_key_id=access_key,
+                aws_secret_access_key=secret_key,
+                region_name=region,
+            )
+            client.list_buckets()
+        except Exception as exc:
+            raise RuntimeError(f"Configured MinIO endpoint is not reachable: {endpoint_url}") from exc
+        try:
+            client.create_bucket(Bucket=bucket)
+        except ClientError as exc:
+            if exc.response.get("Error", {}).get("Code") != "BucketAlreadyOwnedByYou":
+                raise
+        yield endpoint_url, access_key, secret_key, bucket
+        return
 
     docker_available = shutil.which("docker") is not None
     if docker_available:
