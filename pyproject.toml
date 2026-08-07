@@ -63,5 +63,9 @@ disallow_untyped_defs = false
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 addopts = "-ra"
+markers = [
+    "unit: unit tests",
+    "integration: integration tests",
+]
 
 

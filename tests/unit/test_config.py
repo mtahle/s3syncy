@@ -5,6 +5,8 @@ import yaml
 
 from s3syncy.config import SyncConfig, load_config, _deep_merge, _expand_path
 
+pytestmark = pytest.mark.unit
+
 
 class TestDeepMerge:
     """Test configuration merging logic."""
