@@ -137,9 +137,10 @@ jobs:
     environment:
       name: release-test
       url: https://test.pypi.org/p/s3syncy
-    permissions:
-      id-token: write
-      actions: read
+     permissions:
+       contents: read
+       actions: read
+
 
     steps:
       - name: Download distribution artifact
@@ -148,11 +149,13 @@ jobs:
           name: dist
           path: dist/
 
-      - name: Publish to PyPI Test
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          repository-url: https://test.pypi.org/legacy/
-          verbose: true
+       - name: Publish to PyPI Test
+         uses: pypa/gh-action-pypi-publish@release/v1
+         with:
+           repository-url: https://test.pypi.org/legacy/
+           verbose: true
+           password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+
 
   # Job 4 — publish to production PyPI only for full (non-pre) releases
   deploy-to-pypi-prod:
@@ -163,8 +166,9 @@ jobs:
     environment:
       name: release
       url: https://pypi.org/p/s3syncy
-    permissions:
-      id-token: write
+     permissions:
+       contents: read
+
 
     steps:
       - name: Download distribution artifact
@@ -173,9 +177,11 @@ jobs:
           name: dist
           path: dist/
 
-      - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          verbose: true
+       - name: Publish to PyPI
+         uses: pypa/gh-action-pypi-publish@release/v1
+         with:
+           verbose: true
+           password: ${{ secrets.PYPI_API_TOKEN }}
+
 
 
