@@ -45,7 +45,7 @@ jobs:
         fi
 
     - name: Run Sonar scan
-      if: steps.sonar-config.outputs.enabled == 'true'
+      if: steps['sonar-config'].outputs.enabled == 'true'
       uses: SonarSource/sonarqube-scan-action@v8
       with:
         args: >-
