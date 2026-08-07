@@ -1,4 +1,4 @@
-"""Filesystem watcher — real-time events via watchdog + periodic full scan."""
+"""Filesystem watcher — real-time events via watchdog."""
 
 from __future__ import annotations
 
@@ -94,13 +94,12 @@ class _DebouncedHandler(FileSystemEventHandler):
 
 
 class SyncWatcher:
-    """Manages watchdog observers for all sync_dirs + periodic scans."""
+    """Manages watchdog observers for all sync_dirs."""
 
     def __init__(self, cfg: SyncConfig, engine: SyncEngine) -> None:
         self._cfg = cfg
         self._engine = engine
         self._observer = Observer()
-        self._stop_event = threading.Event()
 
     def start(self) -> None:
         """Start watching all configured directories."""
@@ -110,17 +109,6 @@ class SyncWatcher:
             log.info("Watching %s", sync_dir)
         self._observer.start()
 
-    def run_periodic_scan(self) -> None:
-        """Block and periodically trigger full scans until stopped."""
-        while not self._stop_event.is_set():
-            log.info("Starting periodic full scan …")
-            try:
-                self._engine.full_scan()
-            except Exception as exc:
-                log.error("Full scan error: %s", exc)
-            self._stop_event.wait(self._cfg.scan_interval)
-
     def stop(self) -> None:
-        self._stop_event.set()
         self._observer.stop()
         self._observer.join(timeout=5)
