@@ -138,6 +138,54 @@ __pycache__/
                                 └─────────────┘
 ```
 
+## Development
+
+### Setup Development Environment
+
+```bash
+# Clone the repository
+git clone https://github.com/mtahle/s3syncy.git
+cd s3syncy
+
+# Install in development mode
+pip install -e .
+
+# Install development dependencies
+pip install -r requirements-dev.txt
+```
+
+### Running Tests
+
+```bash
+# Run all tests
+pytest
+
+# Run with coverage
+pytest --cov=s3syncy --cov-report=html
+
+# Run only unit tests
+pytest tests/unit -m unit
+
+# Run specific test file
+pytest tests/unit/test_config.py
+```
+
+### Code Quality
+
+```bash
+# Format code
+black s3syncy tests
+
+# Sort imports
+isort s3syncy tests
+
+# Type checking
+mypy s3syncy
+
+# Linting
+ruff check s3syncy tests
+```
+
 ## License
 
 MIT
