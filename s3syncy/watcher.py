@@ -100,6 +100,7 @@ class SyncWatcher:
         self._cfg = cfg
         self._engine = engine
         self._observer = Observer()
+        self._started = False
 
     def start(self) -> None:
         """Start watching all configured directories."""
@@ -108,7 +109,11 @@ class SyncWatcher:
             self._observer.schedule(handler, str(sync_dir), recursive=True)
             log.info("Watching %s", sync_dir)
         self._observer.start()
+        self._started = True
 
     def stop(self) -> None:
+        """Stop the observer. Safe to call before ``start()`` or repeatedly."""
         self._observer.stop()
-        self._observer.join(timeout=5)
+        if self._started:
+            self._observer.join(timeout=5)
+            self._started = False
