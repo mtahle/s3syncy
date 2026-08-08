@@ -23,7 +23,6 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 10
-        command: server /data
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -42,19 +41,20 @@ jobs:
 
       - name: Wait for MinIO readiness
         run: |
-          for i in {1..30}; do
-            if curl -sf http://127.0.0.1:9000/minio/health/live; then
-              exit 0
+          attempts=0
+          until curl -sf http://127.0.0.1:9000/minio/health/live; do
+            attempts=$((attempts + 1))
+            if [ "$attempts" -ge 30 ]; then
+              exit 1
             fi
             sleep 2
           done
-          exit 1
 
-       - name: Run integration tests
-         env:
-           AWS_ACCESS_KEY_ID: minioadmin
-           AWS_SECRET_ACCESS_KEY: minioadmin
-           AWS_DEFAULT_REGION: us-east-1
-           MINIO_ENDPOINT_URL: http://127.0.0.1:9000
-         run: pytest -q tests/integration
+      - name: Run integration tests
+        env:
+          AWS_ACCESS_KEY_ID: minioadmin
+          AWS_SECRET_ACCESS_KEY: minioadmin
+          AWS_DEFAULT_REGION: us-east-1
+          MINIO_ENDPOINT_URL: http://127.0.0.1:9000
+        run: pytest -q tests/integration
 

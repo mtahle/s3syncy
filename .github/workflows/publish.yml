@@ -77,6 +77,7 @@ jobs:
           flags: gim
 
       - name: Fail fast if release tag does not match source version
+        if: ${{ github.event_name == 'release' }}
         shell: bash
         run: |
           version="${{ steps.regex.outputs.group1 }}"
@@ -160,7 +161,7 @@ jobs:
   deploy-to-pypi-prod:
     name: Deploy to PyPI
     needs: [gate, get-version, build, deploy-to-pypi-test]
-    if: ${{ !github.event.release.prerelease }}
+    if: ${{ github.event_name == 'release' && !github.event.release.prerelease }}
     runs-on: ubuntu-latest
     environment:
       name: release
