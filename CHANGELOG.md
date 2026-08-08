@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.4](https://github.com/mtahle/s3syncy/compare/0.1.3...0.1.4) (2026-08-08)
+
+
+### Bug Fixes
+
+* make daemon shutdown responsive to stop signals ([4401a8c](https://github.com/mtahle/s3syncy/commit/4401a8c823d4dc284e91670fddd98c44ea79a8cc))
+* make publish workflow run on main merges and repair integration tests yaml ([2c2eb4f](https://github.com/mtahle/s3syncy/commit/2c2eb4fcd309d958231572cd8271b17b9a3bb900))
+* pass server /data to minio service container ([def7124](https://github.com/mtahle/s3syncy/commit/def712484c1f098666d042f45f35422d07f9b354))
+* repair publish workflow yaml indentation ([#44](https://github.com/mtahle/s3syncy/issues/44)) ([f79e10c](https://github.com/mtahle/s3syncy/commit/f79e10c393fb25203ab9b1381d586b7659f123ef))
+* responsive graceful shutdown + version 1.2.0 ([d8a0838](https://github.com/mtahle/s3syncy/commit/d8a0838f244b769625f2f325c10a67f60b5c0028))
+* skip existing files on PyPI Test publish ([c399320](https://github.com/mtahle/s3syncy/commit/c3993200cd888d7f10bbf73258a4a1e46e508a00))
+
 ## [0.1.3](https://github.com/mtahle/s3syncy/compare/0.1.2...0.1.3) (2026-08-07)
 
 
