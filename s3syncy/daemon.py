@@ -166,6 +166,7 @@ class SyncDaemon:
         """Trigger a graceful shutdown from another thread."""
         self._shutdown_event.set()
         with self._runtime_lock:
+            self.engine.request_stop()
             if self.watcher is not None:
                 self.watcher.stop()
                 self.watcher = None
@@ -175,6 +176,7 @@ class SyncDaemon:
             if self._paused_event.is_set():
                 return
             self._paused_event.set()
+            self.engine.request_stop()
             if self.watcher is not None:
                 self.watcher.stop()
                 self.watcher = None
@@ -186,6 +188,7 @@ class SyncDaemon:
             if not self._paused_event.is_set():
                 return
             self._paused_event.clear()
+            self.engine.clear_stop()
             if not self._shutdown_event.is_set():
                 self._start_watcher_locked()
             self._write_state("running")
@@ -202,6 +205,7 @@ class SyncDaemon:
 
             with self._runtime_lock:
                 old_cfg = self.cfg
+                self.engine.request_stop()
                 if self.watcher is not None:
                     self.watcher.stop()
                     self.watcher = None
@@ -241,7 +245,6 @@ class SyncDaemon:
         self.index = SyncIndex(db_path)
         self.exclusion = ExclusionFilter(cfg.exclude_file)
         self.engine = SyncEngine(cfg, self.index, self.exclusion)
-        self.watcher = SyncWatcher(cfg, self.engine)
 
     def _start_watcher_locked(self) -> None:
         # Watchdog observer objects are single-use; always create a fresh watcher.
@@ -380,6 +383,7 @@ class SyncDaemon:
     def _graceful_shutdown(self) -> None:
         log.info("Shutting down …")
         with self._runtime_lock:
+            self.engine.request_stop()
             if self.watcher is not None:
                 self.watcher.stop()
                 self.watcher = None

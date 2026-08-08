@@ -34,17 +34,20 @@ class TestBandwidthLimiter:
         limiter.consume(50_000)  # should require ~0.5s of sleep at 100KB/s
         assert len(sleeps) == 1
         assert sleeps[0] == pytest.approx(0.5, rel=0.25)
-    def test_multiple_consumes(self):
-        """Test multiple consume calls."""
+    def test_multiple_consumes(self, monkeypatch):
+        """Multiple consumes each incur their proportional delay."""
         limiter = throttle.BandwidthLimiter(100_000)  # 100 KB/s
 
-        start = time.monotonic()
-        limiter.consume(25_000)  # 25 KB
-        limiter.consume(25_000)  # 25 KB
-        elapsed = time.monotonic() - start
+        sleeps: list[float] = []
+        monkeypatch.setattr(throttle.time, "sleep", lambda s: sleeps.append(s))
+
+        limiter.consume(100_000)  # drain the initial token bucket
+        limiter.consume(25_000)  # 25 KB -> 0.25s
+        limiter.consume(25_000)  # 25 KB -> 0.25s
 
         # Total 50KB at 100KB/s = ~0.5 seconds
-        assert 0.4 < elapsed < 0.7
+        assert len(sleeps) == 2
+        assert sum(sleeps) == pytest.approx(0.5, rel=0.25)
     def test_multiple_consumes_no_sleep_within_bucket(self, monkeypatch):
         """Test multiple consume calls."""
         limiter = throttle.BandwidthLimiter(100_000)  # 100 KB/s

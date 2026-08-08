@@ -49,6 +49,9 @@ class SyncEngine:
         self.index = index
         self.exclusion = exclusion
 
+        # Set by the daemon to interrupt in-flight scans on pause/shutdown/reload.
+        self._stop_event = threading.Event()
+
         # Bandwidth limiters.
         self._ul = BandwidthLimiter(cfg.upload_limit_bytes)
         self._dl = BandwidthLimiter(cfg.download_limit_bytes)
@@ -81,14 +84,28 @@ class SyncEngine:
 
     # ── public API ──────────────────────────────────────────────────────
 
+    def request_stop(self) -> None:
+        """Signal in-flight scans/workers to bail at the next checkpoint."""
+        self._stop_event.set()
+
+    def clear_stop(self) -> None:
+        """Clear the stop signal (e.g. when resuming after a pause)."""
+        self._stop_event.clear()
+
     def full_scan(self) -> None:
         """Walk every sync_dir, detect changes, upload/download as needed."""
         for sync_dir in self.cfg.sync_dirs:
+            if self._stop_event.is_set():
+                return
             self._scan_local(sync_dir)
+            if self._stop_event.is_set():
+                return
             self._scan_remote(sync_dir)
 
     def handle_event(self, path: Path, event_type: str, sync_root: Path) -> None:
         """Handle a single filesystem event (create / modify / delete)."""
+        if self._stop_event.is_set():
+            return
         rel = self._rel_path(path, sync_root)
         if rel is None or self.exclusion.is_excluded(rel):
             return
@@ -121,6 +138,8 @@ class SyncEngine:
         """Walk *sync_dir* and enqueue uploads for new / changed files."""
         futures = []
         for root, dirs, files in os.walk(sync_dir):
+            if self._stop_event.is_set():
+                break
             # Prune excluded dirs in-place so os.walk skips them.
             dirs[:] = [
                 d for d in dirs
@@ -150,12 +169,16 @@ class SyncEngine:
 
     def _scan_remote(self, sync_dir: Path) -> None:
         """Detect remote-only files and download (or record) them."""
+        if self._stop_event.is_set():
+            return
         remote_keys = self._list_remote_keys(sync_dir)
         if remote_keys is None:
             return
 
         futures = []
         futures.extend(self._scan_remote_existing(sync_dir, remote_keys))
+        if self._stop_event.is_set():
+            return
         futures.extend(self._scan_remote_missing(sync_dir, remote_keys))
         self._wait(futures)
 
@@ -182,6 +205,8 @@ class SyncEngine:
     ) -> list:
         futures = []
         for scoped_rel, (local_rel, obj) in remote_keys.items():
+            if self._stop_event.is_set():
+                break
             rec = self.index.get(scoped_rel)
             local_path = sync_dir / local_rel
             if local_path.exists():
@@ -208,6 +233,8 @@ class SyncEngine:
     ) -> list:
         futures = []
         for rec in self.index.all_records(sync_root=str(sync_dir)):
+            if self._stop_event.is_set():
+                break
             scoped_rel = rec.rel_path
             local_rel = self._local_rel_from_scoped(scoped_rel, sync_dir)
             if local_rel is None:
@@ -229,6 +256,8 @@ class SyncEngine:
     # ── internal: single-file operations ────────────────────────────────
 
     def _upload_one(self, local_path: Path, rel: str, sync_root: Path) -> None:
+        if self._stop_event.is_set():
+            return
         if not local_path.is_file():
             return
         scoped_rel = self._scoped_rel(rel, sync_root)
@@ -327,6 +356,8 @@ class SyncEngine:
     def _download_one(
         self, rel: str, scoped_rel: str, sync_root: Path, remote_meta: dict
     ) -> None:
+        if self._stop_event.is_set():
+            return
         s3_key = self._make_key(scoped_rel)
         local_path = sync_root / rel
         local_path.parent.mkdir(parents=True, exist_ok=True)
@@ -354,6 +385,10 @@ class SyncEngine:
     def _delete_remote(self, rel: str, sync_root: Path) -> None:
         scoped_rel = self._scoped_rel(rel, sync_root)
         s3_key = self._make_key(scoped_rel)
+        with self._lock:
+            if s3_key in self._active_keys:
+                log.debug("Skipping delete %s — upload in flight", rel)
+                return
         try:
             self._s3.delete_object(Bucket=self.cfg.s3_bucket, Key=s3_key)
             self.index.delete(scoped_rel)
@@ -454,6 +489,8 @@ class SyncEngine:
         remote_meta: dict,
     ) -> None:
         """Full conflict resolution path when both local and remote exist."""
+        if self._stop_event.is_set():
+            return
         stat = local_path.stat()
         local_hash = compute_hash(local_path, self.cfg.integrity_algorithm)
         action = self._resolve_conflict(local_path, rel, stat, local_hash, remote_meta)
@@ -510,11 +547,18 @@ class SyncEngine:
     # ── thread helpers ─────────────────────────────────────────────────
 
     def _submit(self, fn, *args):
-        return self._pool.submit(fn, *args)
+        if self._stop_event.is_set():
+            return None
+        try:
+            return self._pool.submit(fn, *args)
+        except RuntimeError:
+            # Pool was shut down by a concurrent reload/shutdown.
+            return None
 
     @staticmethod
     def _wait(futures: list) -> None:
-        for f in as_completed(futures):
+        pending = [f for f in futures if f is not None]
+        for f in as_completed(pending):
             exc = f.exception()
             if exc:
                 log.error("Worker error: %s", exc)
