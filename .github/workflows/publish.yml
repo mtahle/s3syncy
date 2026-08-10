@@ -70,7 +70,7 @@ jobs:
 
       - name: Extract version with regex
         id: regex
-        uses: kaisugi/action-regex-match@v1.0.1
+        uses: kaisugi/action-regex-match@v1.0.2
         with:
           text: ${{ steps.read-file.outputs.content }}
           regex: ${{ env.REGEX_PATTERN }}
