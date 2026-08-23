@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "s3syncy"
-version = "1.2.0"
+version = "0.1.4"
 description = "Cross-platform, multithreaded S3 file synchronization daemon"
 readme = "README.md"
 requires-python = ">=3.10"
